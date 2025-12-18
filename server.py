@@ -335,9 +335,31 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             # Serve static files
             super().do_GET()
 
-print(f"Serving at http://{HOST}:{PORT}")
-print("To stop, press Ctrl+C")
+# ... (previous code)
 
-# Use ThreadingHTTPServer instead of TCPServer
-with ThreadingHTTPServer((HOST, PORT), CustomHandler) as httpd:
-    httpd.serve_forever()
+# Safe PORT retrieval
+try:
+    PORT = int(os.environ.get('PORT', 8081))
+except (ValueError, TypeError):
+    PORT = 8081
+    print(f"Warning: Invalid PORT environment variable. Defaulting to {PORT}", flush=True)
+
+HOST = '0.0.0.0'
+
+print(f"Attempting to start server on {HOST}:{PORT}...", flush=True)
+
+if __name__ == "__main__":
+    try:
+        with ThreadingHTTPServer((HOST, PORT), CustomHandler) as httpd:
+            print(f"✅ Server successfully started.", flush=True)
+            print(f"🚀 Serving at http://{HOST}:{PORT}", flush=True)
+            print("Press Ctrl+C to stop", flush=True)
+            httpd.serve_forever()
+    except Exception as e:
+        print(f"❌ FATAL ERROR: Server crashed: {e}", flush=True)
+        # Log to stderr to ensure it appears in error tracking
+        sys.stderr.write(f"FATAL ERROR: {e}\n")
+        # Do not exit immediately if you want to keep container alive for inspection,
+        # but usually we want it to crash to restart. 
+        # However, for debugging, let's keep it alive briefly or just exit.
+        sys.exit(1)
