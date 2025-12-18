@@ -15,8 +15,10 @@ app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
 # 2. Configuration & Constants
+# 2. Configuration & Constants
 PORT = int(os.environ.get('PORT', 8081))
-API_KEY = os.environ.get('GEMINI_API_KEY')
+# Try both common variable names
+API_KEY = os.environ.get('GEMINI_API_KEY') or os.environ.get('GOOGLE_API_KEY')
 
 # Fallback to api_key.txt if env var not set
 if not API_KEY:
@@ -24,7 +26,7 @@ if not API_KEY:
         with open("api_key.txt", "r") as f:
             API_KEY = f.read().strip()
     except FileNotFoundError:
-        print("WARNING: 'api_key.txt' not found and GEMINI_API_KEY environment variable not set.")
+        print("WARNING: 'api_key.txt' not found and GEMINI_API_KEY/GOOGLE_API_KEY environment variable not set.")
 
 # Configure Gemini
 model = None
@@ -123,8 +125,17 @@ Y solo después de ese bloque, despídete cordialmente:
 if API_KEY:
     try:
         genai.configure(api_key=API_KEY)
-        model = genai.GenerativeModel('gemini-2.0-flash', system_instruction=SYSTEM_INSTRUCTION)
-        print("✅ Gemini initialized successfully (gemini-2.0-flash).")
+        # Try 2.0 first
+        try:
+            model = genai.GenerativeModel('gemini-2.0-flash', system_instruction=SYSTEM_INSTRUCTION)
+            # Test initialization
+            chat = model.start_chat(history=[])
+            print("✅ Gemini initialized successfully (gemini-2.0-flash).")
+        except Exception as e_2:
+            print(f"⚠️ warning: Could not init gemini-2.0-flash ({e_2}). Falling back to 1.5-flash.")
+            model = genai.GenerativeModel('gemini-1.5-flash', system_instruction=SYSTEM_INSTRUCTION)
+            print("✅ Gemini initialized successfully (gemini-1.5-flash fallback).")
+            
     except Exception as e:
         print(f"❌ Error initializing Gemini: {e}")
 
