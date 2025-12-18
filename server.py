@@ -11,10 +11,12 @@ import datetime
 # Try to import google.generativeai
 try:
     import google.generativeai as genai
-except ImportError:
-    print("Error: 'google-generativeai' library not found.")
-    print("Please install it running: pip install google-generativeai")
-    sys.exit(1)
+except ImportError as e:
+    print(f"CRITICAL ERROR: 'google-generativeai' library not found. Details: {e}")
+    print("Please ensure it is in requirements.txt and installed.")
+    # Do not exit, so we can see the logs and /status still works
+    # sys.exit(1) 
+    genai = None
 
 PORT = int(os.environ.get('PORT', 8081))
 HOST = '0.0.0.0'  # Allow external connections
