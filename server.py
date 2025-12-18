@@ -143,13 +143,14 @@ Y solo después de ese bloque, despídete cordialmente:
         
         try:
             # Try to use experimental system_instruction if available or just init the model
-            model = genai.GenerativeModel('gemini-2.0-flash-exp', system_instruction=system_instruction)
+            # Switched to gemini-1.5-flash for better stability and quota management
+            model = genai.GenerativeModel('gemini-1.5-flash', system_instruction=system_instruction)
             chat = model.start_chat(history=[])
-            print("Gemini initialized with system instruction (gemini-2.0-flash-exp).")
+            print("Gemini initialized with system instruction (gemini-1.5-flash).")
         except Exception as e:
             log_error(f"Init Error: {e}")
             print(f"Warning: Could not init with system_instruction, falling back. Error: {e}")
-            model = genai.GenerativeModel('gemini-2.0-flash-exp')
+            model = genai.GenerativeModel('gemini-1.5-flash')
             chat = model.start_chat(history=[])
             # Send as first message if system_instr param fails
             chat.send_message(system_instruction)
