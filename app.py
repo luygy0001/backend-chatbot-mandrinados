@@ -123,8 +123,8 @@ Y solo después de ese bloque, despídete cordialmente:
 if API_KEY:
     try:
         genai.configure(api_key=API_KEY)
-        model = genai.GenerativeModel('gemini-1.5-flash', system_instruction=SYSTEM_INSTRUCTION)
-        print("✅ Gemini initialized successfully.")
+        model = genai.GenerativeModel('gemini-2.0-flash', system_instruction=SYSTEM_INSTRUCTION)
+        print("✅ Gemini initialized successfully (gemini-2.0-flash).")
     except Exception as e:
         print(f"❌ Error initializing Gemini: {e}")
 
