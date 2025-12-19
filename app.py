@@ -173,7 +173,7 @@ def chat():
 
     except Exception as e:
         print(f"Error in chat: {e}")
-        return jsonify({"error": "Error al procesar tu mensaje."}), 500
+        return jsonify({"error": f"Error al procesar tu mensaje: {str(e)}"}), 500
 
 @app.route('/api/send-email', methods=['POST'])
 def send_email():
