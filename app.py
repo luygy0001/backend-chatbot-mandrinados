@@ -1,11 +1,11 @@
 import os
 import datetime
 import smtplib
+import requests
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import google.generativeai as genai
 from dotenv import load_dotenv
 
 # 1. Load Configuration
@@ -126,14 +126,9 @@ Y solo después de ese bloque, despídete cordialmente:
 """
 
 if API_KEY:
-    try:
-        genai.configure(api_key=API_KEY)
-        # Use gemini-pro (only compatible model)
-        model = genai.GenerativeModel('gemini-pro')
-        print("✅ Gemini Pro initialized successfully.")
-    except Exception as e:
-        print(f"❌ Error configuring Gemini API: {e}")
-        model = None
+    # We'll use REST API directly instead of the library
+    model = True  # Just a flag to indicate API key exists
+    print(f"✅ API Key configured: {API_KEY[:10]}...")
 
 # 3. Routes
 @app.route('/api/status', methods=['GET'])
@@ -153,20 +148,45 @@ def chat():
         if not user_message:
             return jsonify({"error": "Mensaje vacío"}), 400
 
-        # Retrieve or create chat session
+        # Build chat history for this user
         if user_id not in chat_sessions:
-            chat_sessions[user_id] = model.start_chat(history=[])
-            # Send system instruction as first message
-            try:
-                chat_sessions[user_id].send_message(SYSTEM_INSTRUCTION)
-            except:
-                pass  # Continue even if fails
+            chat_sessions[user_id] = []
+            # Add system instruction
+            chat_sessions[user_id].append({
+                "role": "user",
+                "parts": [{"text": SYSTEM_INSTRUCTION}]
+            })
+            chat_sessions[user_id].append({
+                "role": "model",
+                "parts": [{"text": "Entendido. ¿En qué puedo ayudarte?"}]
+            })
         
-        chat_session = chat_sessions[user_id]
+        # Add user message
+        chat_sessions[user_id].append({
+            "role": "user",
+            "parts": [{"text": user_message}]
+        })
         
-        # Send user message and get response
-        response = chat_session.send_message(user_message)
-        return jsonify({"reply": response.text})
+        # Call REST API directly
+        url = f"https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key={API_KEY}"
+        
+        payload = {
+            "contents": chat_sessions[user_id]
+        }
+        
+        response = requests.post(url, json=payload, timeout=30)
+        response.raise_for_status()
+        
+        result = response.json()
+        reply_text = result['candidates'][0]['content']['parts'][0]['text']
+        
+        # Add response to history
+        chat_sessions[user_id].append({
+            "role": "model",
+            "parts": [{"text": reply_text}]
+        })
+        
+        return jsonify({"reply": reply_text})
 
     except Exception as e:
         print(f"Error in chat: {e}")
