@@ -24,11 +24,16 @@ if API_KEY:
 else:
     print("⚠️ WARNING: OPENAI_API_KEY environment variable not set.")
 
-# Configure OpenAI Client
+# Configure OpenAI Client (lazy initialization)
 client = None
-if API_KEY:
-    client = OpenAI(api_key=API_KEY)
-    print("✅ OpenAI client initialized successfully.")
+
+def get_openai_client():
+    """Lazy initialization of OpenAI client"""
+    global client
+    if client is None and API_KEY:
+        client = OpenAI(api_key=API_KEY)
+        print("✅ OpenAI client initialized successfully.")
+    return client
 
 chat_sessions = {}  # Dictionary to store chat sessions per user
 
@@ -134,7 +139,8 @@ def status():
 
 @app.route('/api/chat', methods=['POST'])
 def chat():
-    if not client:
+    openai_client = get_openai_client()
+    if not openai_client:
         return jsonify({"error": "El asistente no está configurado (Falta API Key)."}), 500
 
     try:
@@ -158,7 +164,7 @@ def chat():
         })
         
         # Call OpenAI API
-        response = client.chat.completions.create(
+        response = openai_client.chat.completions.create(
             model="gpt-4o-mini",  # Faster and cheaper than gpt-4
             messages=chat_sessions[user_id],
             temperature=0.7,
