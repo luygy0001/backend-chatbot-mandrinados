@@ -128,26 +128,9 @@ Y solo después de ese bloque, despídete cordialmente:
 if API_KEY:
     try:
         genai.configure(api_key=API_KEY)
-        # Try multiple models in order of preference
-        models_to_try = ['gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-pro']
-        model_initialized = False
-        
-        for model_name in models_to_try:
-            try:
-                model = genai.GenerativeModel(model_name, system_instruction=SYSTEM_INSTRUCTION)
-                # Test initialization
-                chat = model.start_chat(history=[])
-                print(f"✅ Gemini initialized successfully ({model_name}).")
-                model_initialized = True
-                break
-            except Exception as e_model:
-                print(f"⚠️ Could not use {model_name}: {e_model}")
-                continue
-        
-        if not model_initialized:
-            print("❌ No compatible Gemini model found. Please check your API key.")
-            model = None
-            
+        # Use gemini-pro (most compatible with free API keys)
+        model = genai.GenerativeModel('gemini-pro')
+        print("✅ Gemini initialized successfully (gemini-pro).")
     except Exception as e:
         print(f"❌ Error configuring Gemini API: {e}")
         model = None
@@ -178,6 +161,11 @@ def chat():
         # Retrieve or create chat session
         if user_id not in chat_sessions:
             chat_sessions[user_id] = model.start_chat(history=[])
+            # Send system instruction as first message to set context
+            try:
+                chat_sessions[user_id].send_message(SYSTEM_INSTRUCTION)
+            except:
+                pass  # Continue even if system instruction fails
         
         chat_session = chat_sessions[user_id]
         
