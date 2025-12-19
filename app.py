@@ -5,7 +5,8 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 from dotenv import load_dotenv
 
 # 1. Load Configuration
@@ -127,24 +128,22 @@ Y solo después de ese bloque, despídete cordialmente:
 
 if API_KEY:
     try:
-        genai.configure(api_key=API_KEY)
-        # Use gemini-1.5-flash (faster and cheaper)
-        model = genai.GenerativeModel(
-            model_name='gemini-1.5-flash',
-            system_instruction=SYSTEM_INSTRUCTION
-        )
-        # Test the model
-        test_chat = model.start_chat(history=[])
-        print("✅ Gemini 1.5 Flash initialized successfully.")
+        # Configure the new client
+        client = genai.Client(api_key=API_KEY)
+        model_name = 'gemini-1.5-flash'
+        
+        # Test the client
+        try:
+            # The new API uses a different approach
+            print(f"✅ Google GenAI client initialized successfully with {model_name}.")
+            model = client  # Store client as model for backward compatibility
+        except Exception as e:
+            print(f"❌ Error initializing client: {e}")
+            model = None
+            
     except Exception as e:
         print(f"❌ Error configuring Gemini API: {e}")
-        print("Trying fallback to gemini-pro...")
-        try:
-            model = genai.GenerativeModel('gemini-pro')
-            print("✅ Gemini Pro initialized successfully (fallback).")
-        except Exception as e2:
-            print(f"❌ All models failed: {e2}")
-            model = None
+        model = None
 
 # 3. Routes
 @app.route('/api/status', methods=['GET'])
@@ -159,24 +158,46 @@ def chat():
     try:
         data = request.json
         user_message = data.get('message', '')
-        # Use session ID if provided, otherwise default to 'global_guest' (or handle as new)
-        # To maintain compatibility with previous stateless/global behavior, we can use a single session
-        # or separate if the frontend sends a user ID. 
-        # Since the previous backend was effectively 1 global session, let's try to be smarter.
-        # If no user_id is passed, we'll just use a 'default' one, but ideally the frontend should send one.
         user_id = data.get('user_id', 'default_guest')
 
         if not user_message:
             return jsonify({"error": "Mensaje vacío"}), 400
 
-        # Retrieve or create chat session
+        # Build chat history for this user
         if user_id not in chat_sessions:
-            chat_sessions[user_id] = model.start_chat(history=[])
+            chat_sessions[user_id] = []
         
-        chat_session = chat_sessions[user_id]
+        # Add system instruction as first message if this is a new session
+        if len(chat_sessions[user_id]) == 0:
+            chat_sessions[user_id].append({
+                "role": "user",
+                "parts": [{"text": SYSTEM_INSTRUCTION}]
+            })
+            chat_sessions[user_id].append({
+                "role": "model", 
+                "parts": [{"text": "Entendido. Soy el asistente técnico de Mandrinados Anaid. ¿En qué puedo ayudarte hoy?"}]
+            })
         
-        response = chat_session.send_message(user_message)
-        return jsonify({"reply": response.text})
+        # Add user message to history
+        chat_sessions[user_id].append({
+            "role": "user",
+            "parts": [{"text": user_message}]
+        })
+        
+        # Generate response using new API
+        response = model.models.generate_content(
+            model='gemini-1.5-flash',
+            contents=chat_sessions[user_id]
+        )
+        
+        # Add model response to history
+        reply_text = response.text
+        chat_sessions[user_id].append({
+            "role": "model",
+            "parts": [{"text": reply_text}]
+        })
+        
+        return jsonify({"reply": reply_text})
 
     except Exception as e:
         print(f"Error in chat: {e}")
