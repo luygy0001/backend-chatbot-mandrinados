@@ -17,17 +17,12 @@ CORS(app)  # Enable CORS for all routes
 # 2. Configuration & Constants
 PORT = int(os.environ.get('PORT', 8081))
 
-# OpenAI API Key
+# OpenAI API Key (from environment variables only)
 API_KEY = os.environ.get('OPENAI_API_KEY')
 if API_KEY:
     print(f"✅ Loaded OpenAI API Key from Environment Variable: {API_KEY[:7]}...")
 else:
-    try:
-        with open("api_key.txt", "r", encoding="utf-8") as f:
-            API_KEY = f.read().strip()
-            print(f"🔑 Loaded API Key from file: {API_KEY[:7]}...")
-    except FileNotFoundError:
-        print("WARNING: 'api_key.txt' not found and OPENAI_API_KEY environment variable not set.")
+    print("⚠️ WARNING: OPENAI_API_KEY environment variable not set.")
 
 # Configure OpenAI Client
 client = None
@@ -193,14 +188,10 @@ def send_email():
         if not history:
              return jsonify({"error": "No hay historial para enviar."}), 400
 
-        # Read Email Key from environment or file
+        # Read Email Password from environment variables only
         email_password = os.environ.get('EMAIL_PASSWORD')
         if not email_password:
-            try:
-                with open("email_key.txt", "r", encoding="utf-8") as f:
-                    email_password = f.read().strip()
-            except FileNotFoundError:
-                return jsonify({"error": "Servidor no configurado (Falta EMAIL_PASSWORD o email_key.txt)"}), 500
+            return jsonify({"error": "Servidor no configurado (Falta EMAIL_PASSWORD en variables de entorno)"}), 500
 
         # Email Configuration
         sender_email = "bot@mandrinadosanaid.com"
