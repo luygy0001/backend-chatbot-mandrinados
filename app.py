@@ -5,8 +5,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from google import genai
-from google.genai import types
+import google.generativeai as genai
 from dotenv import load_dotenv
 
 # 1. Load Configuration
@@ -128,19 +127,10 @@ Y solo después de ese bloque, despídete cordialmente:
 
 if API_KEY:
     try:
-        # Configure the new client
-        client = genai.Client(api_key=API_KEY)
-        model_name = 'gemini-1.5-flash'
-        
-        # Test the client
-        try:
-            # The new API uses a different approach
-            print(f"✅ Google GenAI client initialized successfully with {model_name}.")
-            model = client  # Store client as model for backward compatibility
-        except Exception as e:
-            print(f"❌ Error initializing client: {e}")
-            model = None
-            
+        genai.configure(api_key=API_KEY)
+        # Use gemini-pro (only compatible model)
+        model = genai.GenerativeModel('gemini-pro')
+        print("✅ Gemini Pro initialized successfully.")
     except Exception as e:
         print(f"❌ Error configuring Gemini API: {e}")
         model = None
@@ -163,41 +153,20 @@ def chat():
         if not user_message:
             return jsonify({"error": "Mensaje vacío"}), 400
 
-        # Build chat history for this user
+        # Retrieve or create chat session
         if user_id not in chat_sessions:
-            chat_sessions[user_id] = []
+            chat_sessions[user_id] = model.start_chat(history=[])
+            # Send system instruction as first message
+            try:
+                chat_sessions[user_id].send_message(SYSTEM_INSTRUCTION)
+            except:
+                pass  # Continue even if fails
         
-        # Add system instruction as first message if this is a new session
-        if len(chat_sessions[user_id]) == 0:
-            chat_sessions[user_id].append({
-                "role": "user",
-                "parts": [{"text": SYSTEM_INSTRUCTION}]
-            })
-            chat_sessions[user_id].append({
-                "role": "model", 
-                "parts": [{"text": "Entendido. Soy el asistente técnico de Mandrinados Anaid. ¿En qué puedo ayudarte hoy?"}]
-            })
+        chat_session = chat_sessions[user_id]
         
-        # Add user message to history
-        chat_sessions[user_id].append({
-            "role": "user",
-            "parts": [{"text": user_message}]
-        })
-        
-        # Generate response using new API
-        response = model.models.generate_content(
-            model='gemini-1.5-flash',
-            contents=chat_sessions[user_id]
-        )
-        
-        # Add model response to history
-        reply_text = response.text
-        chat_sessions[user_id].append({
-            "role": "model",
-            "parts": [{"text": reply_text}]
-        })
-        
-        return jsonify({"reply": reply_text})
+        # Send user message and get response
+        response = chat_session.send_message(user_message)
+        return jsonify({"reply": response.text})
 
     except Exception as e:
         print(f"Error in chat: {e}")
