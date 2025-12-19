@@ -16,6 +16,3 @@ venv.bak/
 .vscode/
 .idea/
 
-# Sensitive Keys
-api_key.txt
-email_key.txt
