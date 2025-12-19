@@ -128,12 +128,23 @@ Y solo después de ese bloque, despídete cordialmente:
 if API_KEY:
     try:
         genai.configure(api_key=API_KEY)
-        # Use gemini-pro (most compatible with free API keys)
-        model = genai.GenerativeModel('gemini-pro')
-        print("✅ Gemini initialized successfully (gemini-pro).")
+        # Use gemini-1.5-flash (faster and cheaper)
+        model = genai.GenerativeModel(
+            model_name='gemini-1.5-flash',
+            system_instruction=SYSTEM_INSTRUCTION
+        )
+        # Test the model
+        test_chat = model.start_chat(history=[])
+        print("✅ Gemini 1.5 Flash initialized successfully.")
     except Exception as e:
         print(f"❌ Error configuring Gemini API: {e}")
-        model = None
+        print("Trying fallback to gemini-pro...")
+        try:
+            model = genai.GenerativeModel('gemini-pro')
+            print("✅ Gemini Pro initialized successfully (fallback).")
+        except Exception as e2:
+            print(f"❌ All models failed: {e2}")
+            model = None
 
 # 3. Routes
 @app.route('/api/status', methods=['GET'])
@@ -161,11 +172,6 @@ def chat():
         # Retrieve or create chat session
         if user_id not in chat_sessions:
             chat_sessions[user_id] = model.start_chat(history=[])
-            # Send system instruction as first message to set context
-            try:
-                chat_sessions[user_id].send_message(SYSTEM_INSTRUCTION)
-            except:
-                pass  # Continue even if system instruction fails
         
         chat_session = chat_sessions[user_id]
         
