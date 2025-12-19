@@ -25,6 +25,7 @@ if not API_KEY:
     try:
         with open("api_key.txt", "r") as f:
             API_KEY = f.read().strip()
+            print(f"🔑 Loaded API Key from file: {API_KEY[:4]}...{API_KEY[-4:]}") # Secure debug
     except FileNotFoundError:
         print("WARNING: 'api_key.txt' not found and GEMINI_API_KEY/GOOGLE_API_KEY environment variable not set.")
 
