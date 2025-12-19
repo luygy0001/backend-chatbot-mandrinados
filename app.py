@@ -19,6 +19,8 @@ CORS(app)  # Enable CORS for all routes
 PORT = int(os.environ.get('PORT', 8081))
 # Try both common variable names
 API_KEY = os.environ.get('GEMINI_API_KEY') or os.environ.get('GOOGLE_API_KEY')
+if API_KEY:
+    print(f"✅ Loaded API Key from Environment Variable: {API_KEY[:4]}...")
 
 # Fallback to api_key.txt if env var not set
 if not API_KEY:
