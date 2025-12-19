@@ -16,3 +16,8 @@ venv.bak/
 .vscode/
 .idea/
 
+# API Keys and sensitive files (use environment variables instead)
+api_key.txt
+email_key.txt
+*.txt
+
