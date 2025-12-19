@@ -135,7 +135,7 @@ if API_KEY:
             chat = model.start_chat(history=[])
             print("✅ Gemini initialized successfully (gemini-1.5-flash).")
         except Exception as e_2:
-             print(f"❌ Error initializing Gemini: {e_2}")
+            print(f"❌ Error initializing Gemini: {e_2}")
             
     except Exception as e:
         print(f"❌ Error initializing Gemini: {e}")
@@ -185,13 +185,14 @@ def send_email():
         if not history:
              return jsonify({"error": "No hay historial para enviar."}), 400
 
-        # Read Email Key
-        email_password = None
-        try:
-            with open("email_key.txt", "r") as f:
-                email_password = f.read().strip()
-        except FileNotFoundError:
-            return jsonify({"error": "Servidor no configurado (Falta email_key.txt)"}), 500
+        # Read Email Key from environment or file
+        email_password = os.environ.get('EMAIL_PASSWORD')
+        if not email_password:
+            try:
+                with open("email_key.txt", "r") as f:
+                    email_password = f.read().strip()
+            except FileNotFoundError:
+                return jsonify({"error": "Servidor no configurado (Falta EMAIL_PASSWORD o email_key.txt)"}), 500
 
         # Email Configuration
         sender_email = "bot@mandrinadosanaid.com"
