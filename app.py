@@ -127,10 +127,10 @@ if API_KEY:
         genai.configure(api_key=API_KEY)
         # Try 2.0 first
         try:
-            model = genai.GenerativeModel('gemini-1.5-flash', system_instruction=SYSTEM_INSTRUCTION)
+            model = genai.GenerativeModel('gemini-1.5-flash-001', system_instruction=SYSTEM_INSTRUCTION)
             # Test initialization
             chat = model.start_chat(history=[])
-            print("✅ Gemini initialized successfully (gemini-1.5-flash).")
+            print("✅ Gemini initialized successfully (gemini-1.5-flash-001).")
         except Exception as e_2:
              print(f"❌ Error initializing Gemini: {e_2}")
             
