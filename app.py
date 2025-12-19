@@ -1,11 +1,11 @@
 import os
 import datetime
 import smtplib
-import requests
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from openai import OpenAI
 from dotenv import load_dotenv
 
 # 1. Load Configuration
@@ -15,25 +15,27 @@ app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
 # 2. Configuration & Constants
-# 2. Configuration & Constants
 PORT = int(os.environ.get('PORT', 8081))
-# Try both common variable names
-API_KEY = os.environ.get('GEMINI_API_KEY') or os.environ.get('GOOGLE_API_KEY')
+
+# OpenAI API Key
+API_KEY = os.environ.get('OPENAI_API_KEY')
 if API_KEY:
-    print(f"✅ Loaded API Key from Environment Variable: {API_KEY[:4]}...")
-
-# Fallback to api_key.txt if env var not set
-if not API_KEY:
+    print(f"✅ Loaded OpenAI API Key from Environment Variable: {API_KEY[:7]}...")
+else:
     try:
-        with open("api_key.txt", "r") as f:
+        with open("api_key.txt", "r", encoding="utf-8") as f:
             API_KEY = f.read().strip()
-            print(f"🔑 Loaded API Key from file: {API_KEY[:4]}...{API_KEY[-4:]}") # Secure debug
+            print(f"🔑 Loaded API Key from file: {API_KEY[:7]}...")
     except FileNotFoundError:
-        print("WARNING: 'api_key.txt' not found and GEMINI_API_KEY/GOOGLE_API_KEY environment variable not set.")
+        print("WARNING: 'api_key.txt' not found and OPENAI_API_KEY environment variable not set.")
 
-# Configure Gemini
-model = None
-chat_sessions = {} # Dictionary to store chat sessions per user
+# Configure OpenAI Client
+client = None
+if API_KEY:
+    client = OpenAI(api_key=API_KEY)
+    print("✅ OpenAI client initialized successfully.")
+
+chat_sessions = {}  # Dictionary to store chat sessions per user
 
 SYSTEM_INSTRUCTION = """
 Eres el Asistente Técnico Virtual de Mandrinados Anaid, empresa especializada en reparación de maquinaria pesada (mandrinado in-situ, soldadura estructural y reparación de cilindros hidráulicos), con servicio en toda España.
@@ -137,7 +139,7 @@ def status():
 
 @app.route('/api/chat', methods=['POST'])
 def chat():
-    if not model:
+    if not client:
         return jsonify({"error": "El asistente no está configurado (Falta API Key)."}), 500
 
     try:
@@ -150,40 +152,30 @@ def chat():
 
         # Build chat history for this user
         if user_id not in chat_sessions:
-            chat_sessions[user_id] = []
-            # Add system instruction
-            chat_sessions[user_id].append({
-                "role": "user",
-                "parts": [{"text": SYSTEM_INSTRUCTION}]
-            })
-            chat_sessions[user_id].append({
-                "role": "model",
-                "parts": [{"text": "Entendido. ¿En qué puedo ayudarte?"}]
-            })
+            chat_sessions[user_id] = [
+                {"role": "system", "content": SYSTEM_INSTRUCTION}
+            ]
         
-        # Add user message
+        # Add user message to history
         chat_sessions[user_id].append({
             "role": "user",
-            "parts": [{"text": user_message}]
+            "content": user_message
         })
         
-        # Call REST API directly - using v1beta (correct version)
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={API_KEY}"
+        # Call OpenAI API
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",  # Faster and cheaper than gpt-4
+            messages=chat_sessions[user_id],
+            temperature=0.7,
+            max_tokens=500
+        )
         
-        payload = {
-            "contents": chat_sessions[user_id]
-        }
+        reply_text = response.choices[0].message.content
         
-        response = requests.post(url, json=payload, timeout=30)
-        response.raise_for_status()
-        
-        result = response.json()
-        reply_text = result['candidates'][0]['content']['parts'][0]['text']
-        
-        # Add response to history
+        # Add assistant response to history
         chat_sessions[user_id].append({
-            "role": "model",
-            "parts": [{"text": reply_text}]
+            "role": "assistant",
+            "content": reply_text
         })
         
         return jsonify({"reply": reply_text})
@@ -205,7 +197,7 @@ def send_email():
         email_password = os.environ.get('EMAIL_PASSWORD')
         if not email_password:
             try:
-                with open("email_key.txt", "r") as f:
+                with open("email_key.txt", "r", encoding="utf-8") as f:
                     email_password = f.read().strip()
             except FileNotFoundError:
                 return jsonify({"error": "Servidor no configurado (Falta EMAIL_PASSWORD o email_key.txt)"}), 500
