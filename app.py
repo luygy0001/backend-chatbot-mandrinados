@@ -127,14 +127,12 @@ if API_KEY:
         genai.configure(api_key=API_KEY)
         # Try 2.0 first
         try:
-            model = genai.GenerativeModel('gemini-2.0-flash', system_instruction=SYSTEM_INSTRUCTION)
+            model = genai.GenerativeModel('gemini-1.5-flash', system_instruction=SYSTEM_INSTRUCTION)
             # Test initialization
             chat = model.start_chat(history=[])
-            print("✅ Gemini initialized successfully (gemini-2.0-flash).")
+            print("✅ Gemini initialized successfully (gemini-1.5-flash).")
         except Exception as e_2:
-            print(f"⚠️ warning: Could not init gemini-2.0-flash ({e_2}). Falling back to 1.5-flash.")
-            model = genai.GenerativeModel('gemini-1.5-flash', system_instruction=SYSTEM_INSTRUCTION)
-            print("✅ Gemini initialized successfully (gemini-1.5-flash fallback).")
+             print(f"❌ Error initializing Gemini: {e_2}")
             
     except Exception as e:
         print(f"❌ Error initializing Gemini: {e}")
@@ -173,7 +171,7 @@ def chat():
 
     except Exception as e:
         print(f"Error in chat: {e}")
-        return jsonify({"error": f"Error al procesar tu mensaje: {str(e)}"}), 500
+        return jsonify({"error": "Error al procesar tu mensaje."}), 500
 
 @app.route('/api/send-email', methods=['POST'])
 def send_email():
