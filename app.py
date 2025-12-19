@@ -167,8 +167,8 @@ def chat():
             "parts": [{"text": user_message}]
         })
         
-        # Call REST API directly
-        url = f"https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key={API_KEY}"
+        # Call REST API directly - using v1beta (correct version)
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={API_KEY}"
         
         payload = {
             "contents": chat_sessions[user_id]
