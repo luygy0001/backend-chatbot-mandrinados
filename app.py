@@ -128,12 +128,12 @@ Y solo después de ese bloque, despídete cordialmente:
 if API_KEY:
     try:
         genai.configure(api_key=API_KEY)
-        # Try 2.0 first
+        # Try gemini-pro (most compatible)
         try:
-            model = genai.GenerativeModel('gemini-1.5-flash', system_instruction=SYSTEM_INSTRUCTION)
+            model = genai.GenerativeModel('gemini-pro', system_instruction=SYSTEM_INSTRUCTION)
             # Test initialization
             chat = model.start_chat(history=[])
-            print("✅ Gemini initialized successfully (gemini-1.5-flash).")
+            print("✅ Gemini initialized successfully (gemini-pro).")
         except Exception as e_2:
             print(f"❌ Error initializing Gemini: {e_2}")
             
