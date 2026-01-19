@@ -139,11 +139,10 @@ def status():
 
 @app.route('/api/chat', methods=['POST'])
 def chat():
-    openai_client = get_openai_client()
-    if not openai_client:
-        return jsonify({"error": "El asistente no está configurado (Falta API Key)."}), 500
-
     try:
+        openai_client = get_openai_client()
+        if not openai_client:
+            return jsonify({"error": "El asistente no está configurado (Falta API Key)."}), 500
         data = request.json
         user_message = data.get('message', '')
         user_id = data.get('user_id', 'default_guest')
@@ -183,7 +182,8 @@ def chat():
 
     except Exception as e:
         print(f"Error in chat: {e}")
-        return jsonify({"error": f"Error al procesar tu mensaje: {str(e)}"}), 500
+        # Capture initialization errors or API errors
+        return jsonify({"error": f"Error del sistema: {str(e)}"}), 500
 
 @app.route('/api/send-email', methods=['POST'])
 def send_email():

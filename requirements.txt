@@ -1,5 +1,5 @@
-# Force Railway rebuild - OpenAI 1.6.1 stable version
-openai==1.6.1
+# Force Railway rebuild - OpenAI latest stable
+openai>=1.35.0
 Flask==3.0.0
 flask-cors==4.0.0
 python-dotenv==1.0.0
