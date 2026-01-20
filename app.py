@@ -101,8 +101,8 @@ Provincia o localidad
 
 PASO 4 – DATOS DEL CLIENTE (IMPRESCINDIBLE)
 Antes de finalizar, solicita amablemente:
-- Nombre y Apellidos
-- Nombre de la Empresa (si procede)
+- Nombre de la Empresa (OBLIGATORIO)
+- Nombre del responsable de maquinaria
 - Teléfono de contacto
 - Correo electrónico
 
