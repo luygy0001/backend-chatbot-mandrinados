@@ -246,6 +246,64 @@ def send_email():
         print(f"SMTP Error: {e}")
         return jsonify({"error": f"Error al enviar correo: {str(e)}"}), 500
 
+@app.route('/api/contact', methods=['POST'])
+def contact_form():
+    try:
+        data = request.json
+        # Validate required fields
+        required_fields = ['nombre', 'empresa', 'telefono', 'email', 'averia']
+        for field in required_fields:
+            if not data.get(field):
+                return jsonify({"error": f"Falta el campo: {field}"}), 400
+
+        # Read Email Password
+        email_password = os.environ.get('EMAIL_PASSWORD')
+        if not email_password:
+            return jsonify({"error": "Configuración incompleta (Falta EMAIL_PASSWORD)"}), 500
+
+        # Email Config
+        sender_email = "bot@mandrinadosanaid.com"
+        receiver_email = "info@mandrinadosanaid.com"
+        smtp_server = "smtp.hostinger.com"
+        smtp_port = 465
+
+        # Create Message
+        msg = MIMEMultipart()
+        msg['From'] = sender_email
+        msg['To'] = receiver_email
+        msg['Subject'] = f"🔔 Nueva Consulta Web - {data['empresa']} ({datetime.datetime.now().strftime('%d/%m')})"
+
+        body = f"""
+        NUEVA CONSULTA RECIBIDA DESDE LA WEB
+        =====================================
+        
+        👤 DATOS DE CONTACTO:
+        ---------------------
+        • Nombre:   {data['nombre']}
+        • Empresa:  {data['empresa']}
+        • Teléfono: {data['telefono']}
+        • Email:    {data['email']}
+        
+        📝 DETALLE DE LA AVERÍA / CONSULTA:
+        -----------------------------------
+        {data['averia']}
+        
+        =====================================
+        Fecha: {datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')}
+        """
+        msg.attach(MIMEText(body, 'plain'))
+
+        # Send Email
+        with smtplib.SMTP_SSL(smtp_server, smtp_port) as server:
+            server.login(sender_email, email_password)
+            server.sendmail(sender_email, receiver_email, msg.as_string())
+        
+        return jsonify({"status": "success"})
+
+    except Exception as e:
+        print(f"Contact Form Error: {e}")
+        return jsonify({"error": f"Error al enviar formulario: {str(e)}"}), 500
+
 if __name__ == '__main__':
     # Local development
     app.run(host='0.0.0.0', port=PORT, debug=True)
