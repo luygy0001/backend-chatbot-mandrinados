@@ -138,6 +138,9 @@ Si el usuario pulsa "Enviar Resumen" o finaliza la charla, genera SIEMPRE este b
 ⚠️ AVERÍA: [Resumen técnico del problema]
 🛑 URGENCIA: [Alta / Media / Baja / No especificada]
 --------------------------------
+
+Y para terminar, añade SIEMPRE esta frase exacta:
+"Por favor, si el resumen es correcto, pulsa el botón del sobre (✉️) situado en la cabecera del chat para enviarnos los datos y comenzar con el estudio del presupuesto."
 """
 
 if API_KEY:
