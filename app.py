@@ -109,7 +109,11 @@ ANTES de dar cualquier presupuesto o validación final, DEBES obtener obligatori
 1. Nombre de la empresa
 2. Nombre del responsable
 3. Teléfono de contacto
+   - VERIFICA que tenga formato válido (mínimo 9 dígitos).
+   - Si no parece un número real, di: "Perdone, el número de teléfono no parece correcto. ¿Podría revisarlo?"
 4. Correo electrónico (si es posible)
+   - VERIFICA que tenga "@" y dominio.
+   - Si no parece un email real, di: "Perdone, necesito un correo electrónico válido para enviarle la información."
 
 SI EL CLIENTE NO DA ESTOS DATOS:
 - No generes el resumen.
