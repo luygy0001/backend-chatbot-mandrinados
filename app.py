@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+CORS(app, resources={r"/api/*": {"origins": "*"}})  # Enable CORS for all API routes explicitly
 
 # 2. Configuration & Constants
 PORT = int(os.environ.get('PORT', 8081))
