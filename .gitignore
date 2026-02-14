@@ -1,9 +1,9 @@
-# Python
+# Python compilation archives
 __pycache__/
 *.py[cod]
 *$py.class
 
-# Virtual environments
+# Virtual environments (Carpetas de entorno virtual)
 .env
 .venv
 env/
@@ -16,8 +16,17 @@ venv.bak/
 .vscode/
 .idea/
 
-# API Keys and sensitive files (use environment variables instead)
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# API Keys and sensitive files (Bloquea textos secretos)
 api_key.txt
 email_key.txt
-*.txt
+secret.txt
 
+# EXCEPCIÓN CRÍTICA (Permite subir las dependencias)
+!requirements.txt
