@@ -28,5 +28,11 @@ api_key.txt
 email_key.txt
 secret.txt
 
+<<<<<<< HEAD
 # EXCEPCIÓN CRÍTICA (Permite subir las dependencias)
 !requirements.txt
+=======
+
+# Workspace files
+*.code-workspace
+>>>>>>> a3c0656 (Limpieza de archivos de configuración local)
